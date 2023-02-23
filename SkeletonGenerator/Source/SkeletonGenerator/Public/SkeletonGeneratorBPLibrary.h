@@ -32,6 +32,9 @@ class USkeletonGeneratorBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, meta = (Category = "Skeleton Generator"))
 	static USkeletalMesh* CreateSkeletalMeshAssetFromBones(const FString& AssetPath, const FName& AssetName, const TArray<FName>& Bones, const TArray<int>& BoneParents, const TArray<FTransform>& BoneParentSpaceTransforms);
 
+	UFUNCTION(BlueprintCallable, meta = (Category = "Skeleton Generator"))
+	static void BindSkeletonSkinWeights(USkeletalMesh* SkeletalMesh);
+
 	UFUNCTION(BlueprintCallable, Category = "GeometryScript|MeshEdits", meta = (ScriptMethod))
 	static UPARAM(DisplayName = "Target Mesh") UDynamicMesh* SetNumWeightLayers(UDynamicMesh* TargetMesh, int32 NumLayers, bool bDeferChangeNotifications = false);
 };

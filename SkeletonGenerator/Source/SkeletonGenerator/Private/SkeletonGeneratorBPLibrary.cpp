@@ -9,7 +9,13 @@
 #include "Rendering/SkeletalMeshModel.h"
 #include "RenderCommandFence.h"
 #include "IMeshBuilderModule.h"
+#include "SkinWeightsBindingTool.h"
 #include "SkeletonGenerator.h"
+#include "LevelEditor.h"
+#include "InteractiveToolManager.h"
+#include "EditorModeManager.h"
+#include "ToolTargetManager.h"
+#include "EdModeInteractiveToolsContext.h"
 
 USkeletonGeneratorBPLibrary::USkeletonGeneratorBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -48,6 +54,7 @@ USkeletalMesh* USkeletonGeneratorBPLibrary::CreateSkeletalMeshAssetFromBones(con
 		SkeletalMesh = NewObject<USkeletalMesh>(Package, AssetName, RF_Public | RF_Standalone);
 	}
 	
+    // Create skeleton object
 	USkeleton* Skeleton = NewObject<USkeleton>(Package, FName("S_" + AssetName.ToString()), RF_Public | RF_Standalone);
 	FReferenceSkeleton RefSkeleton;
 	FSkeletalMeshImportData SkelMeshImportData;
@@ -120,6 +127,34 @@ USkeletalMesh* USkeletonGeneratorBPLibrary::CreateSkeletalMeshAssetFromBones(con
 
 	return SkeletalMesh;
 #endif //else !WITH_EDITOR || !WITH_EDITORONLY_DATA
+	
+}
+
+void USkeletonGeneratorBPLibrary::BindSkeletonSkinWeights(USkeletalMesh* SkeletalMesh)
+{
+	/*auto SkinBindingTool = NewObject<USkinWeightsBindingTool>(GetTransientPackage());
+	auto Targets = TArray<USkeletalMesh*>{ SkeletalMesh };
+	SkinBindingTool->SetTargets(Targets);*/
+	FLevelEditorModule* LevelEditorModule = FModuleManager::GetModulePtr<FLevelEditorModule>(TEXT("LevelEditor"));
+	TWeakPtr<ILevelEditor> LevelEditorPtr = LevelEditorModule->GetLevelEditorInstance();
+
+	if (auto LevelEditor = LevelEditorPtr.Pin()) {
+		// Set target for skin bind tool
+		
+		/*const FToolTargetTypeRequirements ToolTargetRequirements =
+			FToolTargetTypeRequirements({
+				UDynamicMeshCommitter::StaticClass(),
+				UDynamicMeshProvider::StaticClass()
+			});*/
+
+		//auto Target = LevelEditor->GetEditorModeManager().GetInteractiveToolsContext()->TargetManager->BuildTarget(SkeletalMesh, FToolTargetTypeRequirements::)
+
+		LevelEditor->GetEditorModeManager().GetInteractiveToolsContext()->ToolManager->SelectActiveToolType(EToolSide::Left, TEXT("BeginSkinWeightsPaintTool"));
+		LevelEditor->GetEditorModeManager().GetInteractiveToolsContext()->ToolManager->ActivateTool(EToolSide::Left);
+		auto ActiveTool = LevelEditorPtr.Pin()->GetEditorModeManager().GetInteractiveToolsContext()->ToolManager->GetActiveTool(EToolSide::Left);
+		check(ActiveTool);
+
+	}
 	
 }
 

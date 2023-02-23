@@ -36,13 +36,19 @@ public class SkeletonGenerator : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"Slate",
+				"Projects",
+                "Blutility",
+				"UMGEditor",
+                "LevelEditor",
+                "Slate",
 				"SlateCore",
 				"RenderCore",
 				"GeometryFramework",
 				"GeometryCore",
                 "MeshBuilder",
-                "UnrealEd"
+                "UnrealEd",
+                "MeshModelingToolsExp",
+				"EditorInteractiveToolsFramework"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
