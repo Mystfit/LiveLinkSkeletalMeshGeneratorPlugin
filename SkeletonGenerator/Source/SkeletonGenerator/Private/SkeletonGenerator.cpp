@@ -25,7 +25,7 @@ void FSkeletonGeneratorModule::StartupModule()
 	
 
 	TSharedPtr<FExtender> NewMenuExtender = MakeShareable(new FExtender);
-	NewMenuExtender->AddMenuExtension("LevelEditor",
+	NewMenuExtender->AddMenuExtension("Media",
 		EExtensionHook::After,
 		PluginCommands,
 		FMenuExtensionDelegate::CreateRaw(this, &FSkeletonGeneratorModule::AddMenuEntry));
@@ -65,9 +65,9 @@ void FSkeletonGeneratorModule::CreatePanel(const FString& BlueprintAssetPath, co
 
 void FSkeletonGeneratorModule::AddMenuEntry(FMenuBuilder& MenuBuilder)
 {
-	MenuBuilder.BeginSection("SkeletonGeneratorMenu", TAttribute<FText>(FText::FromString("Live Link Skeleton Generator")));
+	//MenuBuilder.BeginSection("SkeletonGeneratorMenu", TAttribute<FText>(FText::FromString("Live Link Skeleton Generator")));
 	MenuBuilder.AddMenuEntry(FSkeletonGeneratorCommands::Get().OpenPluginWindow);
-	MenuBuilder.EndSection();
+	//MenuBuilder.EndSection();
 }
 
 

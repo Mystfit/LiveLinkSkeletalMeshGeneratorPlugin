@@ -9,6 +9,7 @@
 #include "Rendering/SkeletalMeshModel.h"
 #include "RenderCommandFence.h"
 #include "IMeshBuilderModule.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "SkinWeightsBindingTool.h"
 #include "SkeletonGenerator.h"
 #include "LevelEditor.h"
@@ -35,6 +36,10 @@ USkeletalMesh* USkeletonGeneratorBPLibrary::CreateSkeletalMeshAssetFromBones(con
 	// Set up package to hold our skeletal mesh and skeleton
 	FString FullPackagePath = FPaths::Combine(AssetPath, AssetName.ToString());
 	UPackage* Package = CreatePackage(*FullPackagePath);
+	if (!IsValid(Package)) {
+		return nullptr;
+	}
+
 	Package->FullyLoad();
 	if (!Package) {
 		UE_LOG(LogTemp, Warning, TEXT("Could not create SkeletalMesh package at path %s"), *FullPackagePath);
@@ -74,7 +79,11 @@ USkeletalMesh* USkeletonGeneratorBPLibrary::CreateSkeletalMeshAssetFromBones(con
 	
 	// Build bone list for reference skeleton
 	for (size_t bone_idx = 0; bone_idx < Bones.Num(); ++bone_idx) {
-		auto ParentSpaceTransform = BoneParentSpaceTransforms[bone_idx];
+		FTransform ParentSpaceTransform;
+		if (BoneParents[bone_idx] > -1) {
+			ParentSpaceTransform = BoneParentSpaceTransforms[bone_idx];
+		}
+		//auto ParentSpaceTransform = BoneParentSpaceTransforms[bone_idx];
 		SkeletalMeshImportData::FJointPos Transform;
 		Transform.Transform = FTransform3f(FRotator3f(ParentSpaceTransform.GetRotation().Rotator()), FVector3f(ParentSpaceTransform.GetLocation()), FVector3f(ParentSpaceTransform.GetScale3D()));
 		SkeletalMeshImportData::FBone bone{
@@ -113,6 +122,19 @@ USkeletalMesh* USkeletonGeneratorBPLibrary::CreateSkeletalMeshAssetFromBones(con
 	FSkeletalMeshBuildParameters SkeletalMeshBuildParameters(SkeletalMesh, GetTargetPlatformManagerRef().GetRunningTargetPlatform(), ImportLODModelIndex, bRegenDepLODs);
 	bool bBuildSuccess = MeshBuilderModule.BuildSkeletalMesh(SkeletalMeshBuildParameters);
 	check(bBuildSuccess);
+
+	// Create initial bounding box based on expanded version of reference pose for meshes without physics assets
+	FBox3f BoundingBox(ForceInitToZero);
+	for (size_t idx = 0; idx < SkeletalMesh->GetRefSkeleton().GetNum(); ++idx) {
+		UE_LOG(LogTemp, Log, TEXT("Bone position %s"), *FVector3f(SkeletalMesh->GetRefSkeleton().GetRefBonePose()[idx].GetLocation()).ToString());
+		BoundingBox += FVector3f(SkeletalMesh->GetRefSkeleton().GetRefBonePose()[idx].GetLocation());
+	}
+	FBox3f Temp = BoundingBox;
+	FVector3f MidMesh = 0.5f * (Temp.Min + Temp.Max);
+	BoundingBox.Min = Temp.Min + 1.0f * (Temp.Min - MidMesh);
+	BoundingBox.Max = Temp.Max + 1.0f * (Temp.Max - MidMesh);
+	BoundingBox.Min[2] = Temp.Min[2] + 0.1f * (Temp.Min[2] - MidMesh[2]);
+	SkeletalMesh->SetImportedBounds(FBoxSphereBounds(FBox3d(BoundingBox)));
 
 	SkeletalMesh->PostEditChange();
 	Skeleton->PostEditChange();
